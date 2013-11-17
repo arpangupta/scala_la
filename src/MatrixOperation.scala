@@ -1,7 +1,16 @@
 import scala.math
 
+//TODO:
+//		1. Complete the Gaussian Elemination code to solve linear Equations
+//		2. Finding Inverses
+
+
+
+
 class ParallelLinearAlgbera
 {
+	//Matrix Addition
+
 	def mat_add(m1: Array[Array[Double]],m2: Array[Array[Double]]) = {
 		var res = Array.ofDim[Double](m1.length, m1(0).length);
 		for(i <- (0 until m1.length).par ; j <- (0 until m1(0).length).par){
@@ -9,6 +18,8 @@ class ParallelLinearAlgbera
 		}
 		res
 	}
+	//Matrix Multiplication
+	
 	def mat_mul(m1: Array[Array[Double]], m2: Array[Array[Double]]) = {
 		var res = Array.fill(m1.length, m2(0).length)(0.0)
 		for(i <-( 0 until m1.length).par; j <- (0 until m2(0).length).par ; k <- (0 until m1(0).length).par){
@@ -16,6 +27,9 @@ class ParallelLinearAlgbera
 		}
 		res
 	}
+
+	//Matrix Subtraction
+	
 	def mat_sub(m1 : Array[Array[Double]], m2 : Array[Array[Double]] ) = {
 		var res = Array.ofDim[Double](m1.length, m1(0).length)
 		for(i <- (0 until m1.length).par ; j <- (0 until m1(0).length).par){
@@ -23,14 +37,76 @@ class ParallelLinearAlgbera
 		}
 		res
 	}
-
+	//Matrix Transpose
+	
 	def mat_transpose(m1 : Array[Array[Double]]) = {
 		var res = Array.ofDim[Double](m1(0).length,m1.length)
 		for(i <- (0 until m1.length).par ; j <- (0 until m1(0).length).par){
 			res(i)(j) = m1(j)(i) 
 		}
 		res
-	}		
+	}
+	//Matrix Copy one to another 
+	
+	def mat_copy(m1 : Array[Array[Double]],m2 : Array[Array[Double]]) = {
+		for(i <- (0 until m1.length).par ; j <- (0 until m1(0).length).par){
+			m2(i)(j) = m1(i)(j) 
+		}
+		m2
+	}
+
+	//Matrix Swapping Rows .. Immutable doesnt change the original matrix
+
+	def mat_swap_rows_immutable(m1: Array[Array[Double]],r1 : Int , r2 : Int) = {
+		var res = Array.ofDim[Double](m1.length, m1(0).length)
+		mat_copy(m1,res)
+		for(i  <- (0 until res(0).length).par){
+			var temp  = res(r1)(i) 
+			res(r1)(i) = res(r2)(i) 
+			res(r2)(i) = temp
+		}
+		res
+	}
+
+	//Matrix Swapping Column .. Immutable doesnt change the original matrix
+
+	def mat_swap_cols_immutable(m1: Array[Array[Double]],c1: Int, c2 : Int) = {
+		var res = Array.ofDim[Double](m1.length, m1(0).length)
+		mat_copy(m1,res)
+		for(i  <- (0 until res(0).length).par){
+			var temp  = res(i)(c1) 
+			res(i)(c1) = res(i)(c2) 
+			res(i)(c2) = temp
+		}
+		res
+	}
+
+	//Matrix Swapping Rows .Changes the original Matrix
+	def mat_swap_rows(m1: Array[Array[Double]],r1 : Int , r2 : Int) = {
+		for(i  <- (0 until m1(0).length).par){
+			var temp  = m1(r1)(i) 
+			m1(r1)(i) = m1(r2)(i) 
+			m1(r2)(i) = temp
+		}
+		m1
+	}
+
+	//Matrix Swapping Column .Changes the original Matrix
+
+	def mat_swap_cols(m1: Array[Array[Double]],c1: Int, c2 : Int) = {
+		for(i  <- (0 until m1(0).length).par){
+			var temp  = m1(i)(c1) 
+			m1(i)(c1) = m1(i)(c2) 
+			m1(i)(c2) = temp
+		}
+		m1
+	}
+
+	//To be implemented still
+
+	def mat_gauss_elemination(m1: Array[Array[Double]]) = {
+		m1
+	}
 
 	def vec_add( v1: Array[Double], v2: Array[Double] ) = {
      	var res = Array.ofDim[Double](v1.length)
@@ -117,9 +193,16 @@ println()
 
 println("Matrix Transpose of m1")
 println(op.mat_transpose(m1).deep.mkString("\n"))
-
-
 println()
+
+println("Matrix row swapping of m1")
+println(op.mat_swap_rows(m1,0,2).deep.mkString("\n"))
+println()
+
+println("Matrix 1" )
+println(m1.deep.mkString("\n"))
+println()
+
 println()
 
 var v1 = Array(1.0,2.0,3.0)
@@ -161,11 +244,3 @@ println()
 println("Vector scalar multiplication v1*2")
 println(op.vec_scalar_mul(v1,2).deep.mkString("\n"))
 println()
-
-
-
-
-
-
-
-
