@@ -167,80 +167,101 @@ class ParallelLinearAlgbera
 }
 
 
-var op = new ParallelLinearAlgbera()
-var m1  = Array(Array(1.0,2.0,3.0),Array(4.0,5.0,6.0),Array(7.0,8.0,9.0))
+object ParallelMatrix {
 
-var m2  = Array(Array(11.0,12.0,13.0),Array(14.0,15.0,16.0),Array(17.0,18.0,19.0))
-println("Matrix 1" )
-println(m1.deep.mkString("\n"))
-println()
+	def main(args : Array[String]) = {
+		var op = new ParallelLinearAlgbera()
+		setParallelismGlobally(args(0).toInt)
 
-println("Matrix 2" )
-println(m2.deep.mkString("\n"))
-println()
+		var m1  = Array.ofDim[Double](args(1).toInt , args(2).toInt )
+		var m2  = Array.ofDim[Double](args(1).toInt , args(2).toInt )
+		var r = new scala.util.Random
+		for( i <- (0 until m1.length).par; j<- (0 until m1(0).length).par)
+		{
+			m1(i)(j) =  r.nextInt(100)
+			m2(i)(j) =  r.nextInt(100)
+		}
+		println("Matrix 1" )
+		println(m1.deep.mkString("\n"))
+		println()
 
-println("Matrix Addition")
-println(op.mat_add(m1,m2).deep.mkString("\n"))
-println()
+		println("Matrix 2" )
+		println(m2.deep.mkString("\n"))
+		println()
 
-println("Matrix Subtraction")
-println(op.mat_sub(m2,m1).deep.mkString("\n"))
-println()
+		args(3) match {
+			case "mat_add" => println(op.mat_add(m1,m2).deep.mkString("\n"))
+			case "mat_sub" => println(op.mat_sub(m1,m2).deep.mkString("\n"))
+			case "mat_mul" => println(op.mat_mul(m1,m2).deep.mkString("\n"))
+			case "mat_transpose" => println(op.mat_transpose(m1).deep.mkString("\n"))
+			case "mat_swap_rows" => println(op.mat_swap_rows(m1,args(4).toInt, args(5).toInt).deep.mkString("\n"))
+			case "mat_swap_cols" => println(op.mat_swap_cols(m1,args(4).toInt, args(5).toInt).deep.mkString("\n"))
+		}
+	}
 
-println("Matrix Multiplication")
-println(op.mat_mul(m1,m2).deep.mkString("\n"))
-println()
+	def setParallelismGlobally(numThreads: Int): Unit = {
+	  		val parPkgObj = scala.collection.parallel.`package`
+	  		val defaultTaskSupportField = parPkgObj.getClass.getDeclaredFields.find{
+	    	_.getName == "defaultTaskSupport"
+	  	}.get
 
-println("Matrix Transpose of m1")
-println(op.mat_transpose(m1).deep.mkString("\n"))
-println()
-
-println("Matrix row swapping of m1")
-println(op.mat_swap_rows(m1,0,2).deep.mkString("\n"))
-println()
-
-println("Matrix 1" )
-println(m1.deep.mkString("\n"))
-println()
-
-println()
-
-var v1 = Array(1.0,2.0,3.0)
-var v2 = Array(4.0,5.0,6.0)
+	  	defaultTaskSupportField.setAccessible(true)
+	  	defaultTaskSupportField.set(
+	    parPkgObj, 
+	    new scala.collection.parallel.ForkJoinTaskSupport(
+	    new scala.concurrent.forkjoin.ForkJoinPool(numThreads)
+	    ) 
+	  )
+	}
+}
 
 
-println("Vector 1" )
-println(v1.deep.mkString("\n"))
-println()
 
-println("Vector 2" )
-println(v2.deep.mkString("\n"))
-println()
+object ParallelVector {
 
-println("Vector Addition")
-println(op.vec_add(v1,v2).deep.mkString("\n"))
-println()
+	def main(args : Array[String]) = {
+		var op = new ParallelLinearAlgbera()
+		setParallelismGlobally(args(0).toInt)
 
-println("Vector Subtraction")
-println(op.vec_sub(v2,v1).deep.mkString("\n"))
-println()
+		var v1  = Array.ofDim[Double](args(1).toInt)
+		var v2  = Array.ofDim[Double](args(1).toInt)
+		var r = new scala.util.Random
+		for( i <- (0 until v1.length).par)
+		{
+			v1(i)=  r.nextInt(100)
+			v2(i) =  r.nextInt(100)
+		}
+		println("Vector 1" )
+		println(v1.deep.mkString("\n"))
+		println()
 
-println("Vector Multiplication")
-println(op.vec_mul(v1,v2).deep.mkString("\n"))
-println()
+		println("Vector 2" )
+		println(v2.deep.mkString("\n"))
+		println()
 
-println("Vector dot")
-println(op.vec_dot(v1,v2))
-println()
+		args(2) match {
+			case "vec_add" => println(op.vec_add(v1,v2).deep.mkString("\n"))
+			case "vec_sub" => println(op.vec_sub(v1,v2).deep.mkString("\n"))
+			case "vec_mul" => println(op.vec_mul(v1,v2).deep.mkString("\n"))
+			case "vec_dot" => println(op.vec_dot(v1,v2))
+			case "vec_scalar_mul" => println(op.vec_scalar_mul(v1,args(3).toInt).deep.mkString("\n"))
+			case "vec_magnitude" => println(op.vec_magnitude(v1))
+			case "vec_normalize" => println(op.vec_normalize(v1).deep.mkString("\n"))
+		}
+	}
 
-println("Vector Magnitude of v1")
-println(op.vec_magnitude(v1))
-println()
+	def setParallelismGlobally(numThreads: Int): Unit = {
+	  		val parPkgObj = scala.collection.parallel.`package`
+	  		val defaultTaskSupportField = parPkgObj.getClass.getDeclaredFields.find{
+	    	_.getName == "defaultTaskSupport"
+	  	}.get
 
-println("Vector Normailization of v1")
-println(op.vec_normalize(v1).deep.mkString("\n"))
-println()
-
-println("Vector scalar multiplication v1*2")
-println(op.vec_scalar_mul(v1,2).deep.mkString("\n"))
-println()
+	  	defaultTaskSupportField.setAccessible(true)
+	  	defaultTaskSupportField.set(
+	    parPkgObj, 
+	    new scala.collection.parallel.ForkJoinTaskSupport(
+	    new scala.concurrent.forkjoin.ForkJoinPool(numThreads)
+	    ) 
+	  )
+	}
+}
