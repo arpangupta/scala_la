@@ -105,21 +105,23 @@ class ParallelLinearAlgbera
 	//To be implemented still
 
 	def mat_gauss_elem(a: Array[Array[Double]], b: Array[Double]) ={
+		object Singular extends Exception {}
 		var n = a.length
-				var singular = false
-				//Constructing Augmented Matrix
-				var augmentmatrix = Array.ofDim[Double](n, n + 1)
-				for (i <- 0 until n)
-					for (j <- 0 until n + 1) {
-						if (j == n) {
-							augmentmatrix(i)(j) = b(i)
-						} else {
-							augmentmatrix(i)(j) = a(i)(j)
-						}
-					}
+		var singular = false
+		//Constructing Augmented Matrix
+		var augmentmatrix = Array.ofDim[Double](n, n + 1)
+		for (i <- 0 until n){
+			for (j <- 0 until n + 1) {
+				if (j == n) {
+					augmentmatrix(i)(j) = b(i)
+				} else {
+					augmentmatrix(i)(j) = a(i)(j)
+				}
+			}
+		}
 		try {
 			for (i <- (0 until n - 1)) {
-				if (augmentmatrix(i)(i) == 0) {
+				if (math.abs(augmentmatrix(i)(i)) <= 1e-10) {
 					var j = i + 1
 							var found = false
 							while (j < n && !found) {
@@ -139,12 +141,7 @@ class ParallelLinearAlgbera
 								augmentmatrix(j)(k) = augmentmatrix(j)(k) - alpha * augmentmatrix(i)(k)
 							}
 				}
-				println()
-				println()
-				println(augmentmatrix.deep.mkString("\n"))
-
 			}
-
 			var res = Array.ofDim[Double](n)
 					//Back substitution
 					for (i <- (1 until n).reverse) {
@@ -157,9 +154,9 @@ class ParallelLinearAlgbera
 			for (i <- (0 until n).par) {
 				res(i) = augmentmatrix(i)(n) / augmentmatrix(i)(i)
 			}
-			res
+			res.deep.mkString("\n")
 		} catch {
-		case Singular => -1
+		case Singular => "singular"
 		}
 	}
 
@@ -220,12 +217,14 @@ class ParallelLinearAlgbera
 		res
 	}
 
+
+
 }
 
 
 object ParallelMatrix {
 
-	def main(args : Array[String]) = {
+	def main(args : Array[String]):Unit = {
 		var op = new ParallelLinearAlgbera()
 		setParallelismGlobally(args(0).toInt)
 
@@ -235,7 +234,7 @@ object ParallelMatrix {
 		for( i <- (0 until m1.length).par; j<- (0 until m1(0).length).par)
 		{
 			m1(i)(j) =  r.nextInt(100)
-					m2(i)(j) =  r.nextInt(100)
+			m2(i)(j) =  r.nextInt(100)
 		}
 		println("Matrix 1" )
 		println(m1.deep.mkString("\n"))
@@ -252,9 +251,48 @@ object ParallelMatrix {
 		case "mat_transpose" => println(op.mat_transpose(m1).deep.mkString("\n"))
 		case "mat_swap_rows" => println(op.mat_swap_rows(m1,args(4).toInt, args(5).toInt).deep.mkString("\n"))
 		case "mat_swap_cols" => println(op.mat_swap_cols(m1,args(4).toInt, args(5).toInt).deep.mkString("\n"))
+
 		}
 	}
+	def setParallelismGlobally(numThreads: Int): Unit = {
+		val parPkgObj = scala.collection.parallel.`package`
+				val defaultTaskSupportField = parPkgObj.getClass.getDeclaredFields.find{
+			_.getName == "defaultTaskSupport"
+		}.get
 
+		defaultTaskSupportField.setAccessible(true)
+		defaultTaskSupportField.set(
+				parPkgObj, 
+				new scala.collection.parallel.ForkJoinTaskSupport(
+						new scala.concurrent.forkjoin.ForkJoinPool(numThreads)
+						) 
+				)
+	}
+	
+}
+
+
+object ParallelGaussElemination {
+
+	def main(args : Array[String]) :Unit = {
+		var op = new ParallelLinearAlgbera()
+		setParallelismGlobally(args(0).toInt)
+
+		var m1  = Array.ofDim[Double](args(1).toInt , args(1).toInt )
+		var v1  = Array.ofDim[Double](args(1).toInt)
+		var r = new scala.util.Random
+		for( i <- (0 until m1.length).par; j<- (0 until m1(0).length).par)
+		{
+			m1(i)(j) =  r.nextInt(100)
+			v1(i) =r.nextInt(100)
+		}
+
+		var retstr = op.mat_gauss_elem(m1,v1)
+
+		println(retstr)
+	
+	
+	}
 	def setParallelismGlobally(numThreads: Int): Unit = {
 		val parPkgObj = scala.collection.parallel.`package`
 				val defaultTaskSupportField = parPkgObj.getClass.getDeclaredFields.find{
@@ -271,11 +309,9 @@ object ParallelMatrix {
 	}
 }
 
-
-
 object ParallelVector {
 
-	def main(args : Array[String]) = {
+	def main(args : Array[String]):Unit = {
 		var op = new ParallelLinearAlgbera()
 		setParallelismGlobally(args(0).toInt)
 
@@ -320,5 +356,7 @@ object ParallelVector {
 						) 
 				)
 	}
+
+
 
 }
