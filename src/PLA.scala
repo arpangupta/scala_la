@@ -21,13 +21,22 @@ class ParallelLinearAlgbera
 	//Matrix Multiplication
 
 	def mat_mul(m1: Array[Array[Double]], m2: Array[Array[Double]]) = {
+		var m3 = mat_transpose(m2)
+		var res = Array.fill(m1.length, m2(0).length)(0.0)
+				for(i <-( 0 until m1.length).par; j <- (0 until m2(0).length).par ; k <- (0 until m1(0).length)){
+					res(i)(j) += m1(i)(k)*m3(j)(k)
+				}
+		res
+	}
+
+	//MAtrix Multiplication Row major
+	def mat_mul_row(m1: Array[Array[Double]], m2: Array[Array[Double]]) = {
 		var res = Array.fill(m1.length, m2(0).length)(0.0)
 				for(i <-( 0 until m1.length).par; j <- (0 until m2(0).length).par ; k <- (0 until m1(0).length)){
 					res(i)(j) += m1(i)(k)*m2(k)(j)
 				}
 		res
 	}
-
 	//Matrix Subtraction
 
 	def mat_sub(m1 : Array[Array[Double]], m2 : Array[Array[Double]] ) = {
@@ -248,6 +257,7 @@ object ParallelMatrix {
 		case "mat_add" => println(op.mat_add(m1,m2).deep.mkString("\n"))
 		case "mat_sub" => println(op.mat_sub(m1,m2).deep.mkString("\n"))
 		case "mat_mul" => println(op.mat_mul(m1,m2).deep.mkString("\n"))
+		case "mat_mul_row" => println(op.mat_mul_row(m1,m2).deep.mkString("\n"))
 		case "mat_transpose" => println(op.mat_transpose(m1).deep.mkString("\n"))
 		case "mat_swap_rows" => println(op.mat_swap_rows(m1,args(4).toInt, args(5).toInt).deep.mkString("\n"))
 		case "mat_swap_cols" => println(op.mat_swap_cols(m1,args(4).toInt, args(5).toInt).deep.mkString("\n"))
