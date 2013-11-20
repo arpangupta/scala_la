@@ -1,5 +1,5 @@
 import scala.math
-
+import scala.collection.parallel.mutable
 //TODO:
 //		1. Complete the Gaussian Elemination code to solve linear Equations
 //		2. Finding Inverses
@@ -22,7 +22,7 @@ class ParallelLinearAlgbera
 	
 	def mat_mul(m1: Array[Array[Double]], m2: Array[Array[Double]]) = {
 		var res = Array.fill(m1.length, m2(0).length)(0.0)
-		for(i <-( 0 until m1.length).par; j <- (0 until m2(0).length).par ; k <- (0 until m1(0).length).par){
+		for(i <-( 0 until m1.length).par; j <- (0 until m2(0).length).par ; k <- (0 until m1(0).length)){
 			res(i)(j) += m1(i)(k)*m2(k)(j)
 		}
 		res
@@ -108,56 +108,56 @@ class ParallelLinearAlgbera
 		m1
 	}
 
-	def vec_add( v1: Array[Double], v2: Array[Double] ) = {
-     	var res = Array.ofDim[Double](v1.length)
+	def vec_add( v1: mutable.ParArray[Double], v2: mutable.ParArray[Double] ) = {
+     	var res = Array.ofDim[Double](v1.length).par
      	for(i <- (0 until v1.length).par){
            	res(i) = v1(i) + v2(i)
        	}
        	res
 	}
 
-	def vec_sub( v1: Array[Double], v2: Array[Double] ) = {
-     	var res = Array.ofDim[Double](v1.length)
+	def vec_sub( v1: mutable.ParArray[Double], v2: mutable.ParArray[Double] ) = {
+     	var res = Array.ofDim[Double](v1.length).par
      	for(i <- (0 until v1.length).par){
            	res(i) = v1(i) - v2(i)
         }
       	res
 	}
-	def vec_mul( v1: Array[Double], v2: Array[Double] ) = {
-     	var res = Array.ofDim[Double](v1.length)
+	def vec_mul( v1: mutable.ParArray[Double], v2: mutable.ParArray[Double] ) = {
+     	var res = Array.ofDim[Double](v1.length).par
      	for(i <- (0 until v1.length).par){
            	res(i) = v1(i) * v2(i)
         }
       	res
 	}
 
-	def vec_sum( v1: Array[Double]) = {
+	def vec_sum( v1: mutable.ParArray[Double]) = {
      	v1.par.fold(0.0)(_ + _)
 	}
 
-	def vec_magnitude( v1: Array[Double]) = {
+	def vec_magnitude( v1: mutable.ParArray[Double]) = {
      	var sum = 0.0
-     	var res = Array.ofDim[Double](v1.length)
+     	var res = Array.ofDim[Double](v1.length).par
      	for(i <- (0 until v1.length).par){
      		res(i) =  v1(i) * v1(i)
         }
       	math.sqrt(vec_sum(res))
 	}
 
-	def vec_normalize( v1: Array[Double]) = {
+	def vec_normalize( v1: mutable.ParArray[Double]) = {
      	val magnitude = vec_magnitude(v1)
-     	var res = Array.ofDim[Double](v1.length)
+     	var res = Array.ofDim[Double](v1.length).par
      	for(i <- (0 until v1.length).par){
      		res(i) = v1(i) / magnitude
         }
       	res
 	}
-	def vec_dot( v1: Array[Double], v2: Array[Double] ) = {
+	def vec_dot( v1: mutable.ParArray[Double], v2: mutable.ParArray[Double] ) = {
       	vec_sum(vec_mul(v1,v2))
 	}
 
-	def vec_scalar_mul( v1: Array[Double], scalar: Double ) = {
-     	var res = Array.ofDim[Double](v1.length)
+	def vec_scalar_mul( v1: mutable.ParArray[Double], scalar: Double ) = {
+     	var res = Array.ofDim[Double](v1.length).par
 		for( i <- (0 until v1.length).par){
 			res(i) = v1(i) * scalar
 		}
@@ -223,8 +223,8 @@ object ParallelVector {
 		var op = new ParallelLinearAlgbera()
 		setParallelismGlobally(args(0).toInt)
 
-		var v1  = Array.ofDim[Double](args(1).toInt)
-		var v2  = Array.ofDim[Double](args(1).toInt)
+		var v1  = Array.ofDim[Double](args(1).toInt).par
+		var v2  = Array.ofDim[Double](args(1).toInt).par
 		var r = new scala.util.Random
 		for( i <- (0 until v1.length).par)
 		{
@@ -232,21 +232,21 @@ object ParallelVector {
 			v2(i) =  r.nextInt(100)
 		}
 		println("Vector 1" )
-		println(v1.deep.mkString("\n"))
+		println(v1)
 		println()
 
 		println("Vector 2" )
-		println(v2.deep.mkString("\n"))
+		println(v2)
 		println()
 
 		args(2) match {
-			case "vec_add" => println(op.vec_add(v1,v2).deep.mkString("\n"))
-			case "vec_sub" => println(op.vec_sub(v1,v2).deep.mkString("\n"))
-			case "vec_mul" => println(op.vec_mul(v1,v2).deep.mkString("\n"))
+			case "vec_add" => println(op.vec_add(v1,v2))
+			case "vec_sub" => println(op.vec_sub(v1,v2))
+			case "vec_mul" => println(op.vec_mul(v1,v2))
 			case "vec_dot" => println(op.vec_dot(v1,v2))
-			case "vec_scalar_mul" => println(op.vec_scalar_mul(v1,args(3).toInt).deep.mkString("\n"))
+			case "vec_scalar_mul" => println(op.vec_scalar_mul(v1,args(3).toInt))
 			case "vec_magnitude" => println(op.vec_magnitude(v1))
-			case "vec_normalize" => println(op.vec_normalize(v1).deep.mkString("\n"))
+			case "vec_normalize" => println(op.vec_normalize(v1))
 		}
 	}
 
@@ -264,4 +264,5 @@ object ParallelVector {
 	    ) 
 	  )
 	}
+	
 }
