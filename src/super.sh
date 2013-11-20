@@ -3,7 +3,7 @@
 for i in 1 2 4 8
 do
 
-	for c in {0..20..2}
+	for c in 1 2 5 7 10 15 20
 	do
 	v=$((c * 100))
 	echo "$i threads Input Size $v"
